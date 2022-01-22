@@ -1,0 +1,5 @@
+docker:
+  - image: kyotov/kydeps:latest
+    auth:
+      username: kyotov
+      password: $DOCKERHUB_PASSWORD
