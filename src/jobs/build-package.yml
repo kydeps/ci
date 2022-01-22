@@ -1,0 +1,26 @@
+executor: kydeps
+
+parameters:
+  package-name:
+    type: string
+
+working_directory: "~/src"
+
+steps:
+  - attach_workspace:
+      at: /tmp/cache
+  - checkout
+  - run: cd ~/src && git submodule update --init --recursive
+  - run: mkdir ~/build
+  - run: |
+      cd ~/build &&
+      cmake -S ~/src -B . \
+        -D 'CMAKE_BUILD_TYPE=Debug' \
+        -D 'KYDEPS_TARGETS=<<parameters.package-name>>' \
+        -D 'KYDEPS_CI_UNIVERSE_BUILD=ON' \
+        -D 'KYDEPS_CACHE_BUCKET=file:///tmp/cache' \
+        -D 'KYDEPS_CACHE_REGISTRY_DIR=/tmp/cache'
+  - run: ls -la ~/build/c
+  - persist_to_workspace:
+      root: ~/build/c
+      paths: "<<parameters.package-name>>.*"

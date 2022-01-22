@@ -1,0 +1,7 @@
+executor: kydeps
+
+working_directory: "~/src"
+
+steps:
+  - attach_workspace:
+      at: /tmp/cache

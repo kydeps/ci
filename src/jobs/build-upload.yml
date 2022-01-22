@@ -1,0 +1,30 @@
+executor: kydeps
+
+working_directory: "~/src"
+
+# TODO(kamen): there is too much repetition here with build-package
+steps:
+  - attach_workspace:
+      at: /tmp/cache
+  - checkout
+  - run: cd ~/src && git submodule update --init --recursive
+  - run: mkdir build
+  - run: |
+      cd build &&
+      cmake -S ~/src -B . \
+        -D 'CMAKE_BUILD_TYPE=Debug' \
+        -D 'KYDEPS_CI_UNIVERSE_BUILD=ON' \
+        -D 'KYDEPS_CACHE_BUCKET=file:///tmp/cache' \
+        -D 'KYDEPS_CACHE_REGISTRY_DIR=/tmp/cache'
+  - run: cp /tmp/cache/*.cmake build/c
+  - run: |
+      cmake \
+        -D KYDEPS_CACHE_REGISTRY_DIR=build/c \
+        -P build/_deps/kydeps_bootstrap-src/packages.cmake
+  - s3/copy:
+      arguments: "--endpoint-url https://nyc3.digitaloceanspaces.com --recursive --acl public-read"
+      from: "build/c"
+      to: "s3://kydeps"
+
+  - store_artifacts:
+      path: build/c/packages.cmake
